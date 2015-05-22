@@ -33,7 +33,15 @@ namespace V10Bulldoze
 		{
 			Assembly me = Assembly.GetExecutingAssembly ();
 			this.name = me.GetName ().Name + " v" + me.GetName ().Version;
-			Type type = typeof(AssemblyDescriptionAttribute);
+			Type type = typeof(CustomAssemblyVariable);
+			if (CustomAssemblyVariable.IsDefined (me, type)) {
+				string releaseType = ((CustomAssemblyVariable)CustomAssemblyVariable.GetCustomAttribute (
+				me,
+				type
+					)).value;
+				if(releaseType != "Release")
+					this.name += " - " + releaseType + " version!";
+			type = typeof(AssemblyDescriptionAttribute);
 			if (AssemblyDescriptionAttribute.IsDefined (me, type))
 				this.desc = ((AssemblyDescriptionAttribute)AssemblyDescriptionAttribute.GetCustomAttribute (me, type)).Description;
 			else

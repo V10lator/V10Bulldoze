@@ -25,3 +25,6 @@ using System.Runtime.CompilerServices;
 //[assembly: AssemblyDelaySign(false)]
 //[assembly: AssemblyKeyFile("")]
 
+
+//  Own variables
+[assembly: CustomAssemblyVariable("Version type", "Development")]
