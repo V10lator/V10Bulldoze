@@ -82,28 +82,31 @@ namespace V10Bulldoze
 			
 			UIButton button = abandonedButton.AddComponent<UIButton> ();
 			button.relativePosition = new Vector3 (7.0f, -57.0f);
-			initButton ("AbandonedButton", button, list, data.abandoned);
+			initButton ("AbandonedButton", button, list, data.abandoned, "Demolish Abandoned", view);
 			button.atlas = atlas;
 
 			button = burnedButton.AddComponent<UIButton> ();
 			button.relativePosition = new Vector3 ((float)(7 + buttonSize + 7), -57.0f);
-			initButton ("BurnedButton", button, list, data.burned);
+			initButton ("BurnedButton", button, list, data.burned, "Demolish Burned", view);
 			button.atlas = atlas;
 			
 			button = audioButton.AddComponent<UIButton> ();
 			button.relativePosition = new Vector3 ((float)(7 + buttonSize + 7 + buttonSize + 7), -57.0f);
-			initButton ("AudioButton", button, list, !data.disableEffect);
+			initButton ("AudioButton", button, list, !data.disableEffect, "Mute Bulldozing", view);
 			button.atlas = atlas;
 			
 			atlas.AddTextures (list.ToArray ());
 		}
 		
-        public static void initButton (string name, UIButton button, FastList<Texture2D> textureList, bool isCheck)
+        public static void initButton (string name, UIButton button, FastList<Texture2D> textureList, bool isCheck, string tooltip, UIView view)
 		{
 			button.name = name;
 			foreach (Texture2D texture in loadTextures (name))
 				textureList.Add (texture);
 			button.width = button.height = buttonSize;
+			button.tooltip = tooltip;
+			button.tooltipBox = view.defaultTooltipBox;
+			button.clickSound = view.defaultClickSound;
 			setButtonColor (button, isCheck);
 			button.eventClick += buttonClick;
         }
