@@ -65,6 +65,8 @@ namespace V10Bulldoze
 		
 		public override void OnLevelUnloading ()
 		{
+			if (!V10Bulldoze.active)
+				return;
 			V10Bulldoze.active = false;
 			if (UserInterface.bulldozeEffect != null)
 				UserInterface.toggleEffects ();
