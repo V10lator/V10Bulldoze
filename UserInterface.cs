@@ -16,7 +16,7 @@ namespace V10Bulldoze
 		public XmlHolder data;
 		private bool needSave = false;
 		private static UserInterface instance;
-		public static EffectInfo bulldozeEffect = null;
+		public static AudioClip bulldozeAudioClip = null;
 		private static int buttonSize = 80;
 
 		public UserInterface ()
@@ -181,12 +181,24 @@ namespace V10Bulldoze
 		
 		public static void toggleEffects ()
 		{
-			if (UserInterface.bulldozeEffect == null) {
-				UserInterface.bulldozeEffect = BuildingManager.instance.m_properties.m_bulldozeEffect;
-				BuildingManager.instance.m_properties.m_bulldozeEffect = null;
+			SoundEffect effect = null;
+			foreach (MultiEffect.SubEffect subEffect in BuildingManager.instance.m_properties.m_bulldozeEffect.GetComponent<MultiEffect> ().m_effects) {
+				if (subEffect.m_effect.name == "Building Bulldoze Sound") {
+					effect = subEffect.m_effect.GetComponent<SoundEffect> ();
+					break;
+				}
+			}
+			if(effect == null) {
+				Debug.Log ("V10Bulldoze: Couldn't find AudioClip!");
+				//TODO
+			}
+			
+			if (UserInterface.bulldozeAudioClip == null) {
+				UserInterface.bulldozeAudioClip = effect.m_audioInfo.m_clip;
+				effect.m_audioInfo.m_clip = null;
 			} else {
-				BuildingManager.instance.m_properties.m_bulldozeEffect = UserInterface.bulldozeEffect;
-				UserInterface.bulldozeEffect = null;
+				effect.m_audioInfo.m_clip = UserInterface.bulldozeAudioClip;
+				UserInterface.bulldozeAudioClip = null;
 			}
 		}
 		
