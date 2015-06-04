@@ -214,6 +214,9 @@ namespace V10Bulldoze
 			audioButton.SetActive (false);
 			abandonedButton = burnedButton = audioButton = null;
 			
+			if (UserInterface.bulldozeAudioClip != null)
+				UserInterface.toggleEffects ();
+			
 			if (needSave) {
 				try {
 					XmlSerializer serializer = new XmlSerializer (typeof(XmlHolder));

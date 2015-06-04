@@ -68,8 +68,6 @@ namespace V10Bulldoze
 			if (!V10Bulldoze.active)
 				return;
 			V10Bulldoze.active = false;
-			if (UserInterface.bulldozeAudioClip != null)
-				UserInterface.toggleEffects ();
 			V10Bulldoze.ui.destroy ();
 			V10Bulldoze.ui = null;
 		}
