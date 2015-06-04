@@ -3,6 +3,7 @@ using ColossalFramework.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
 using UnityEngine;
@@ -15,9 +16,8 @@ namespace V10Bulldoze
 		public XmlHolder data;
 		private bool needSave = false;
 		private static UserInterface instance;
-		private static readonly Color gray = new Color32(255, 90, 0, 192);
 		public static EffectInfo bulldozeEffect = null;
-		private static int buttonWidth = 175;
+		private static int buttonSize = 80;
 
 		public UserInterface ()
 		{
@@ -49,10 +49,10 @@ namespace V10Bulldoze
 				return;
 			}
 			
-			//1.X -> 1.2
-			if (data.version < 1.2d) {
+			//1.X -> 1.3
+			if (data.version < 1.3d) {
 				// Everything has already been setted to its default value, so let's just adjust the version and save.
-				data.version = 1.2d;
+				data.version = 1.3d;
 				needSave = true;
 			}
 			
@@ -64,57 +64,99 @@ namespace V10Bulldoze
 			abandonedButton.transform.parent = parent;
 			burnedButton.transform.parent = parent;
 			audioButton.transform.parent = parent;
-
-			UIButton button = abandonedButton.AddComponent<UIButton> ();
-			button.relativePosition = new Vector3 (7.0f, -7.0f);
-			button.text = "Demolish Abandoned";
-			initButton (button, data.abandoned);
-
-			float spacer = (float) (7 + buttonWidth);
 			
+			Shader shader = Shader.Find ("UI/Default UI Shader");
+			if (shader == null) {
+				Debug.Log ("V10Bulldoze: Can't find default UI shader.");
+				shader = new Shader ();
+				shader.name = "V10Bulldoze dummy shader";
+			}
+			
+			UITextureAtlas atlas = ScriptableObject.CreateInstance<UITextureAtlas> ();
+			atlas.name = "V10Bulldoze Atlas";
+			atlas.material = new Material (shader);
+			atlas.material.mainTexture = new Texture2D (0, 0, TextureFormat.DXT5, false);
+
+			FastList<Texture2D> list = new FastList<Texture2D> ();
+			list.EnsureCapacity (18);
+			
+			UIButton button = abandonedButton.AddComponent<UIButton> ();
+			button.relativePosition = new Vector3 (7.0f, -57.0f);
+			initButton ("AbandonedButton", button, list, data.abandoned);
+			button.atlas = atlas;
+
 			button = burnedButton.AddComponent<UIButton> ();
-			button.relativePosition = new Vector3 (spacer, -7.0f);
-			button.text = "Demolish Burned";
-			initButton (button, data.burned);
+			button.relativePosition = new Vector3 ((float)(7 + buttonSize + 7), -57.0f);
+			initButton ("BurnedButton", button, list, data.burned);
+			button.atlas = atlas;
 			
 			button = audioButton.AddComponent<UIButton> ();
-			button.relativePosition = new Vector3 (spacer + spacer, -7.0f);
-			button.text = "Play effects";
-			initButton (button, !data.disableEffect);
+			button.relativePosition = new Vector3 ((float)(7 + buttonSize + 7 + buttonSize + 7), -57.0f);
+			initButton ("AudioButton", button, list, !data.disableEffect);
+			button.atlas = atlas;
+			
+			atlas.AddTextures (list.ToArray ());
 		}
 		
-        public static void initButton (UIButton button, bool isCheck)
+        public static void initButton (string name, UIButton button, FastList<Texture2D> textureList, bool isCheck)
 		{
-			button.width = buttonWidth;
-			button.height = 30;
-			string sprite = "SubBarButtonBase";
-			string spriteHov = sprite + "Hovered";
-			button.normalBgSprite = spriteHov;
-			button.disabledBgSprite = spriteHov;
-			button.hoveredBgSprite = spriteHov;
-			button.focusedBgSprite = spriteHov;
-			button.pressedBgSprite = sprite + "Pressed";
-			setButtonColor(button, isCheck);
+			button.name = name;
+			foreach (Texture2D texture in loadTextures (name))
+				textureList.Add (texture);
+			button.width = button.height = buttonSize;
+			setButtonColor (button, isCheck);
 			button.eventClick += buttonClick;
         }
 		
+		private static readonly string[] buttonStates = { "Active", "Inactive" };
+		private static readonly string [] buttonModes = { "Normal", "Hovered", "Pressed" };
+		private static Texture2D[] loadTextures (string button)
+		{
+			string prefix = "V10Bulldoze.Assets." + button + ".";
+			Stream stream;
+			Assembly assembly = Assembly.GetAssembly (typeof(UserInterface));
+			BinaryReader reader;
+			byte[] bytes;
+			
+			Texture2D[] textures = new Texture2D[UserInterface.buttonStates.Length * UserInterface.buttonModes.Length];
+			int i = 0;
+			
+			foreach (string state in UserInterface.buttonStates) {
+				foreach (string mode in UserInterface.buttonModes) {
+					//TODO: try/catch ?
+					stream = assembly.GetManifestResourceStream (prefix + state + "." + mode + ".png");
+					if (stream == null) {
+						Debug.Log ("V10Bulldoze: " + prefix + state + "." + mode + ".png" + " not found!");
+						//TODO
+					}
+					
+					reader = new BinaryReader (stream);
+					bytes = reader.ReadBytes ((int)stream.Length);
+					
+					textures [i] = new Texture2D (1, 1, TextureFormat.DXT5, false);
+					if (!textures [i].LoadImage (bytes)) {	// If DXT5 fails...
+						Debug.Log ("V10Bulldoze: Your system can't encode DXT5. Trying without compression.");
+						textures [i] = new Texture2D (1, 1, TextureFormat.ARGB32, false);	// ...try again with RGBA
+						if (!textures [i].LoadImage (bytes)) {
+							Debug.Log ("V10Bulldoze: Couldn't load " + prefix + state + "." + mode + ".png");
+							//TODO
+						}
+					}
+					reader.Close ();
+					stream.Close ();
+					textures [i].name = "V10Bulldoze" + button + state + mode;
+					i++;
+				}
+			}
+			return textures;
+		}
+		
 		private static void setButtonColor (UIButton button, bool active)
 		{
-			Color bg;
-			Color text;
-			if (active) {
-				bg = Color.red;
-				text = Color.yellow;
-			} else {
-				bg = UserInterface.gray;
-				text = Color.white;
-			}
-			
-			button.color = 
-                    	button.focusedColor = 
-                    	button.hoveredColor = 
-						button.pressedColor = bg;
-			button.textColor = text;
+			string prefix = "V10Bulldoze" + button.name + (active ? "Active" : "Inactive");
+			button.normalFgSprite = button.focusedFgSprite = prefix + "Normal";
+			button.hoveredFgSprite = prefix + "Hovered";
+			button.pressedFgSprite = prefix + "Pressed";
 		}
 		
         private static void buttonClick (UIComponent component, UIMouseEventParameter eventParam)
@@ -178,13 +220,16 @@ namespace V10Bulldoze
 	public class XmlHolder
 	{
 		[XmlElement(ElementName="File_version")]
-		public double version = 1.2;
+		public double version = 1.3;
 			
     	[XmlElement(ElementName="Demolish_abandoned")]
 		public bool abandoned;
 
     	[XmlElement("Demolish_burned")]
 		public bool burned;
+		
+		[XmlElement("Ignore_Service")] // New since v1.3
+		public bool service;
 		
 		[XmlElement("Interval")]
 		public int interval;
@@ -200,7 +245,7 @@ namespace V10Bulldoze
 			this.abandoned = this.burned = true;
 			this.interval = 10;
 			this.max = 256;
-			this.disableEffect = false;
+			this.disableEffect = this.service = false;
 		}
 	}
 }

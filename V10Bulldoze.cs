@@ -2,6 +2,7 @@ using ColossalFramework;
 using ICities;
 using System;
 using System.Collections;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -38,9 +39,10 @@ namespace V10Bulldoze
 				string releaseType = ((CustomAssemblyVariable)CustomAssemblyVariable.GetCustomAttribute (
 				me,
 				type
-					)).value;
-				if(releaseType != "Release")
+				)).value;
+				if (releaseType != "Release")
 					this.name += " - " + releaseType + " version!";
+			}
 			type = typeof(AssemblyDescriptionAttribute);
 			if (AssemblyDescriptionAttribute.IsDefined (me, type))
 				this.desc = ((AssemblyDescriptionAttribute)AssemblyDescriptionAttribute.GetCustomAttribute (me, type)).Description;
@@ -95,8 +97,12 @@ namespace V10Bulldoze
 			
 			if (V10Bulldoze.ui.data.abandoned)
 				checkBuildings (SkylinesOverwatch.Data.Instance.BuildingsAbandoned);
-			if (V10Bulldoze.ui.data.burned && c2 <= V10Bulldoze.ui.data.max)
-				checkBuildings (SkylinesOverwatch.Data.Instance.BuildingsBurnedDown);
+			if (V10Bulldoze.ui.data.burned && c2 <= V10Bulldoze.ui.data.max) {
+				ushort [] toCheck = SkylinesOverwatch.Data.Instance.BuildingsBurnedDown;
+				if (V10Bulldoze.ui.data.service)
+					toCheck = toCheck.Except (SkylinesOverwatch.Data.Instance.PlayerBuildings).ToArray ();
+				checkBuildings (toCheck);
+			}
 			
 			c2 = 0;
 		}
