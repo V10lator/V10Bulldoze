@@ -13,7 +13,7 @@ namespace V10Bulldoze
     public class UserInterface
     {
         private GameObject abandonedButton, burnedButton, audioButton;
-		public XmlHolder data;
+		public XmlData data;
 		private static UserInterface instance;
 		public static float[] bulldozeAudioClip = null;
 		private static int buttonSize = 80;
@@ -33,14 +33,14 @@ namespace V10Bulldoze
 				return;
 			
 			try {
-				XmlSerializer serializer = new XmlSerializer (typeof(XmlHolder));
+				XmlSerializer serializer = new XmlSerializer (typeof(XmlData));
 				using (StreamReader reader = new StreamReader("V10Bulldoze.xml")) {
-					data = (XmlHolder)serializer.Deserialize (reader);
+					data = (XmlData)serializer.Deserialize (reader);
 					reader.Close ();
 				}
 			} catch (FileNotFoundException) {
 				// No options file yet
-				data = new XmlHolder ();
+				data = new XmlData ();
 			} catch (Exception e) {
 				Debug.Log ("V10Bulldoze: " + e.GetType ().Name + " while reading xml file: " + e.Message + "\n" + e.StackTrace + "\n\n");
 				if (e.InnerException != null) 
@@ -218,7 +218,7 @@ namespace V10Bulldoze
 			
 			if (data.needSave) {
 				try {
-					XmlSerializer serializer = new XmlSerializer (typeof(XmlHolder));
+					XmlSerializer serializer = new XmlSerializer (typeof(XmlData));
 					using (StreamWriter writer = new StreamWriter("V10Bulldoze.xml")) {
 						serializer.Serialize (writer, data);
 						writer.Flush ();
@@ -236,7 +236,7 @@ namespace V10Bulldoze
     }
 	
 	[XmlRoot("V10Bulldoze_Configuration")]
-	public class XmlHolder
+	public class XmlData
 	{
 		[XmlElement(ElementName="File_version")]
 		public double version = 1.3;
@@ -262,7 +262,7 @@ namespace V10Bulldoze
 		[XmlIgnore]
 		public bool needSave = false;
 		
-		public XmlHolder ()
+		public XmlData ()
 		{
 			this.abandoned = this.burned = true;
 			this.interval = 10;
