@@ -14,7 +14,6 @@ namespace V10Bulldoze
     {
         private GameObject abandonedButton, burnedButton, audioButton;
 		public XmlHolder data;
-		private bool needSave = false;
 		private static UserInterface instance;
 		public static float[] bulldozeAudioClip = null;
 		private static int buttonSize = 80;
@@ -53,7 +52,7 @@ namespace V10Bulldoze
 			if (data.version < 1.3d) {
 				// Everything has already been setted to its default value, so let's just adjust the version and save.
 				data.version = 1.3d;
-				needSave = true;
+				data.needSave = true;
 			}
 			
 			abandonedButton = new GameObject ("V10Bulldoze abandoned button");
@@ -176,7 +175,7 @@ namespace V10Bulldoze
 			UIButton button = (UIButton)component;
 			setButtonColor (button, active);
 			button.Unfocus ();
-			UserInterface.instance.needSave = true;
+			UserInterface.instance.data.needSave = true;
         }
 		
 		public static void toggleEffects ()
@@ -217,7 +216,7 @@ namespace V10Bulldoze
 			if (UserInterface.bulldozeAudioClip != null)
 				UserInterface.toggleEffects ();
 			
-			if (needSave) {
+			if (data.needSave) {
 				try {
 					XmlSerializer serializer = new XmlSerializer (typeof(XmlHolder));
 					using (StreamWriter writer = new StreamWriter("V10Bulldoze.xml")) {
@@ -260,12 +259,16 @@ namespace V10Bulldoze
 		[XmlElement("Disable_bulldoze_effect")] // New since v1.2
 		public bool disableEffect;
 		
+		[XmlIgnore]
+		public bool needSave = false;
+		
 		public XmlHolder ()
 		{
 			this.abandoned = this.burned = true;
 			this.interval = 10;
 			this.max = 256;
 			this.disableEffect = this.service = false;
+			this.needSave = false;
 		}
 	}
 }
