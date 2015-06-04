@@ -41,6 +41,7 @@ namespace V10Bulldoze
 			} catch (FileNotFoundException) {
 				// No options file yet
 				data = new XmlData ();
+				data.needSave = true;
 			} catch (Exception e) {
 				Debug.Log ("V10Bulldoze: " + e.GetType ().Name + " while reading xml file: " + e.Message + "\n" + e.StackTrace + "\n\n");
 				if (e.InnerException != null) 
@@ -260,7 +261,7 @@ namespace V10Bulldoze
 		public bool disableEffect;
 		
 		[XmlIgnore]
-		public bool needSave = false;
+		public bool needSave;
 		
 		public XmlData ()
 		{
