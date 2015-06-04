@@ -16,9 +16,9 @@ namespace V10Bulldoze
 		public XmlHolder data;
 		private bool needSave = false;
 		private static UserInterface instance;
-		public static AudioClip bulldozeAudioClip = null;
+		public static float[] bulldozeAudioClip = null;
 		private static int buttonSize = 80;
-
+		
 		public UserInterface ()
 		{
 			instance = this;
@@ -188,18 +188,23 @@ namespace V10Bulldoze
 					break;
 				}
 			}
-			if(effect == null) {
+			if (effect == null) {
 				Debug.Log ("V10Bulldoze: Couldn't find AudioClip!");
 				//TODO
+				return;
 			}
 			
+			float[] toSet;
 			if (UserInterface.bulldozeAudioClip == null) {
-				UserInterface.bulldozeAudioClip = effect.m_audioInfo.m_clip;
-				effect.m_audioInfo.m_clip = null;
+				float[] tmpData = new float[effect.m_audioInfo.m_clip.samples * effect.m_audioInfo.m_clip.channels];
+				effect.m_audioInfo.m_clip.GetData (tmpData, 0);
+				UserInterface.bulldozeAudioClip = (float[])tmpData.Clone ();
+				toSet = new float[tmpData.Length];
 			} else {
-				effect.m_audioInfo.m_clip = UserInterface.bulldozeAudioClip;
+				toSet = UserInterface.bulldozeAudioClip;
 				UserInterface.bulldozeAudioClip = null;
 			}
+			effect.m_audioInfo.m_clip.SetData (toSet, 0);
 		}
 		
 		public void destroy ()
